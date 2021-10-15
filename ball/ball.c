@@ -45,13 +45,15 @@ void main() {
 	*SPRITES_ENABLE = 1;
 	VICII->BORDER_COLOR = DARK_GREY;
 	VICII->BG_COLOR = BLACK;
-	int sleepCounter = 0;
 	while(1) {
-		while (sleepCounter++<1000){} ;
-		sleepCounter = 0;
+		while (*RASTER < BORDER_YPOS_BOTTOM) {};
+		VICII->BORDER_COLOR = RED;
+
 		moveSprite();
 		animateSprite();
 		showSprite(0, spriteX >> 3, (byte)(spriteY >> 3));
+		VICII->BORDER_COLOR = DARK_GREY;
+		while (*RASTER >= BORDER_YPOS_BOTTOM) {};
 	}
 }
 
