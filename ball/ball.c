@@ -26,39 +26,67 @@ __address(0x2000) const byte[] BALL_SPRITE = {
 	%00000000,%11111111,%00000000
 };
 
-int spriteX = 100;
-byte spriteY = 100;
+int spriteX = 100 << 3;
+int spriteY = 100 << 3;
+int vx = 5;
+int vy = 0;
+const byte gravity = 1;
+const int BORDER_LEFT = BORDER_XPOS_LEFT << 3;
+const int BORDER_RIGHT = (BORDER_XPOS_RIGHT - 24) << 3;
+const int BORDER_TOP = BORDER_YPOS_TOP << 3;
+const int BORDER_BOTTOM = (BORDER_YPOS_BOTTOM - 21) << 3;
 
 void main() {
 	clearScr();
-	showSprite(0, spriteX, spriteY);
+	showSprite(0, spriteX>>3, (byte)(spriteY>>3));
 	byte * SPRITE_POINTER = DEFAULT_SCREEN + OFFSET_SPRITE_PTRS;
 	*SPRITE_POINTER = toSpritePtr(BALL_SPRITE);
+	*SPRITES_COLOR = RED;
 	*SPRITES_ENABLE = 1;
+	VICII->BORDER_COLOR = DARK_GREY;
+	VICII->BG_COLOR = BLACK;
 	int sleepCounter = 0;
 	while(1) {
 		while (sleepCounter++<1000){} ;
 		sleepCounter = 0;
 		moveSprite();
+		animateSprite();
+		showSprite(0, spriteX >> 3, (byte)(spriteY >> 3));
 	}
 }
 
 void moveSprite() {
-	const byte* JOYSTICK = 56320;
-	byte joy_read = (* JOYSTICK) ^ 0xff;
+	byte joy_read = ~(CIA1->PORT_A);
 	if (joy_read & 1) {
-		spriteY -= 1;
+		vy -= 1;
 	}
 	if (joy_read & 2) {
-		spriteY += 1;
+		vy += 1;
 	}
 	if (joy_read & 4) {
-		spriteX -= 1;
+		vx -= 1;
 	}
 	if (joy_read & 8) {
-		spriteX += 1;
+		vx += 1;
 	}
-	showSprite(0, spriteX, spriteY);
+}
+
+void animateSprite() {
+	vy = vy + gravity;
+	spriteX += vx;
+	spriteY += vy;
+	if (spriteX <= BORDER_LEFT && vx < 0) {
+		vx = -vx;
+	}
+	if (spriteX >= BORDER_RIGHT && vx > 0) {
+		vx = -vx;
+	}
+	if (spriteY <= BORDER_TOP && vy < 0) {
+		vy = -vy;
+	}
+	if (spriteY >= BORDER_BOTTOM && vy > 0) {
+		vy = -vy;
+	}
 }
 
 void clearScr() {
